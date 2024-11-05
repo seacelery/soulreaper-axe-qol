@@ -1,0 +1,26 @@
+<configuration>
+    <appender name="DEBUG_APPENDER" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="INFO_APPENDER" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Enable DEBUG for your plugin package -->
+    <logger name="com.soulreaperaxeqol" level="DEBUG">
+        <appender-ref ref="DEBUG_APPENDER"/>
+    </logger>
+
+    <!-- Set root to INFO for everything else -->
+    <root level="INFO">
+        <appender-ref ref="INFO_APPENDER"/>
+    </root>
+</configuration>
