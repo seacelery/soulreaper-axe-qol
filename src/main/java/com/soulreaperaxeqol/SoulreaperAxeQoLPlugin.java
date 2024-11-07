@@ -4,7 +4,6 @@ import com.google.inject.Provides;
 
 import javax.imageio.ImageIO;
 import javax.inject.Inject;
-
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
@@ -12,7 +11,6 @@ import net.runelite.api.events.AnimationChanged;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemContainerChanged;
-import net.runelite.client.RuneLite;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -20,12 +18,10 @@ import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.client.plugins.regenmeter.RegenMeterConfig;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.ImageUtil;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 
@@ -39,9 +35,6 @@ public class SoulreaperAxeQoLPlugin extends Plugin {
 	private static final int LIGHTBEARER_TOTAL_SPEC_REGEN_TICKS = DEFAULT_TOTAL_SPEC_REGEN_TICKS / 2;
 	private static final int SOULREAPER_MAX_STACKS = 5;
 	private static final int SOULREAPER_STACK_DECREMENT_TICKS = 20;
-
-	private static final File PLUGIN_DIR = new File(RuneLite.RUNELITE_DIR, "SoulreaperAxeQoL");
-	private static final File IMAGE_FILE = new File(PLUGIN_DIR, "soulreaper_sprite.png");
 
 	@Inject
 	private Client client;
@@ -81,17 +74,15 @@ public class SoulreaperAxeQoLPlugin extends Plugin {
 
 	private boolean lightbearerEquipped = false;
 	private boolean firstGameTick = true;
+	private boolean originalShowSpecialSetting;
 	private int totalSpecRegenTicks = DEFAULT_TOTAL_SPEC_REGEN_TICKS;
 	private int ticksUntilSpecRegen = 0;
 	private int ticksUntilStackRemoval = 0;
-
-	private boolean originalShowSpecialSetting;
 
 	@Override
 	protected void startUp() throws Exception {
 		overlayManager.add(overlay);
 
-		RegenMeterConfig regenMeterConfig = configManager.getConfig(RegenMeterConfig.class);
 		originalShowSpecialSetting = configManager.getConfiguration("regenmeter", "showSpecial", Boolean.class);
 		configManager.setConfiguration("regenmeter", "showSpecial", false);
 
@@ -101,6 +92,7 @@ public class SoulreaperAxeQoLPlugin extends Plugin {
 	@Override
 	protected void shutDown() throws Exception {
 		overlayManager.remove(overlay);
+
 		configManager.setConfiguration("regenmeter", "showSpecial", originalShowSpecialSetting);
 	}
 
@@ -134,7 +126,6 @@ public class SoulreaperAxeQoLPlugin extends Plugin {
 
 		getSpecialAttackPercentValue();
 		updateSpecRegenTimer();
-
 		updateStackRemovalTimer();
 	}
 
@@ -223,7 +214,6 @@ public class SoulreaperAxeQoLPlugin extends Plugin {
 		}
 
 		soulreaperRegenProgress = calculateProgressPercentage(SOULREAPER_STACK_DECREMENT_TICKS - ticksUntilStackRemoval, SOULREAPER_STACK_DECREMENT_TICKS);
-//		log.debug("Current stacks: {}, ticks until removal: {}", soulreaperStackCount, ticksUntilStackRemoval);
 	}
 
 	private void updateOrbColour() {

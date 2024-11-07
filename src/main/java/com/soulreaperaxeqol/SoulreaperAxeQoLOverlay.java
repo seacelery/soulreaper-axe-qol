@@ -77,8 +77,8 @@ public class SoulreaperAxeQoLOverlay extends Overlay {
     private Font loadFont() {
         try (InputStream fontStream = getClass().getResourceAsStream("/resources/runescape.ttf")) {
             return Font.createFont(Font.TRUETYPE_FONT, fontStream);
-        } catch (Exception e) {
-            return new Font("Arial", Font.PLAIN, 12); // Fallback font
+        } catch (Exception error) {
+            return new Font("Arial", Font.PLAIN, 12);
         }
     }
 
@@ -156,14 +156,20 @@ public class SoulreaperAxeQoLOverlay extends Overlay {
 
     @Override
     public Dimension render(Graphics2D g) {
+        // render spec regen at all times
+        if (!plugin.isSoulreaperAxeEquipped()) {
+            renderRegen(g, plugin.getSpecRegenProgress(), config.getSpecRegenColor(), false);
+        }
+
+        // hide minimap orb when Soulreaper Axe not equipped and no stacks are remaining
         if (!plugin.isSoulreaperAxeEquipped() && plugin.getSoulreaperStackCount() == 0) return null;
 
         Color baseColor = getChosenBaseColor();
         Color borderColor = getChosenBorderColor();
         Color shadowColor = getChosenShadowColor();
-
         g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
 
+        // hide text box when option selected
         if (!config.showTextOnOrb()) {
             renderTextBox(g, shadowColor, 33, 0.6 * CIRCLE_SHADOW_DIAMETER + 2, -2);
             renderTextBox(g, borderColor, 32, 0.6 * CIRCLE_SHADOW_DIAMETER, -1);
@@ -172,6 +178,7 @@ public class SoulreaperAxeQoLOverlay extends Overlay {
 
         renderInnerCircle(g, INNER_CIRCLE_COLOR);
 
+        // load, recolour, and render spec orb
         try {
             orbImage = ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/spec_orb_image.png")));
             if (plugin.isSoulreaperAxeEquipped()) {
@@ -191,6 +198,7 @@ public class SoulreaperAxeQoLOverlay extends Overlay {
 
         renderOuterCircle(g, borderColor);
 
+        // render borders
         if (config.showTextOnOrb()) {
             renderCircleBorder(g, baseColor, 90, -360, 1f);
             renderCircleShadow(g, shadowColor, 90, -360);
@@ -207,6 +215,7 @@ public class SoulreaperAxeQoLOverlay extends Overlay {
             renderCircleShadow(g, shadowColor, 90, 60);
         }
 
+        // render text & regen
         if (plugin.isSoulreaperAxeEquipped()) {
             if (!config.showTextOnOrb()) {
                 renderOrbIcon(g, specialAttackSprite);
@@ -223,7 +232,6 @@ public class SoulreaperAxeQoLOverlay extends Overlay {
             } else {
                 renderText(g, String.valueOf(plugin.getSoulreaperStackCount()), true, (double) plugin.getSoulreaperStackCount() / 5, 24, 3);
             }
-            renderRegen(g, plugin.getSpecRegenProgress(), config.getSpecRegenColor(), false);
             renderRegen(g, plugin.getSoulreaperRegenProgress(), config.getSoulreaperRegenColor(), true);
         }
 

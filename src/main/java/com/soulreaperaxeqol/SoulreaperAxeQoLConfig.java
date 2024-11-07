@@ -111,7 +111,7 @@ public interface SoulreaperAxeQoLConfig extends Config {
 			position = 9,
 			section = "Colours"
 	) default Color getSpecOrbColor() {
-		return new Color(0x27A2CB);
+		return new Color(0x2798BD);
 	}
 
 	@ConfigItem(
