@@ -21,23 +21,18 @@
 
 #### Soulreaper Axe equipped
 <img src="src/main/resources/readme_images/soulreaper_equipped.png" alt="Soulreaper Axe equipped image">
-<br>
 
 #### Soulreaper Axe unequipped with one or more stacks remaining
 <img src="src/main/resources/readme_images/soulreaper_unequipped.png" alt="Soulreaper Axe unequipped image">
-<br>
 
 #### Fixed mode - show text on orb enabled
 <img src="src/main/resources/readme_images/fixed_mode.png" alt="Fixed mode image">
-<br>
 
 #### Theme select - matches some packs from the Resource Packs plugin
 <img src="src/main/resources/readme_images/pink_option.png" alt="Pink theme option image">
-<br>
 
 #### Custom colour options
 <img src="src/main/resources/readme_images/options.png" alt="Custom colour options image">
-<br>
 
 <p align="right"><a href="#readme-top">back to top</a></p>
 
