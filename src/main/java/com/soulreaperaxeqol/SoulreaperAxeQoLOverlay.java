@@ -21,9 +21,9 @@ import net.runelite.client.config.ConfigManager;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
+import net.runelite.client.ui.FontManager;
 
 import java.awt.image.BufferedImage;
-import java.io.InputStream;
 import java.util.Objects;
 
 @Slf4j
@@ -47,7 +47,7 @@ public class SoulreaperAxeQoLOverlay extends Overlay {
     private BufferedImage specialAttackSprite;
     private BufferedImage soulreaperSprite;
 
-    private Font osrsFont;
+    private final Font osrsFont;
 
     public BufferedImage recolorImage(BufferedImage image, Color newColor) {
         float[] newHSBValues = Color.RGBtoHSB(newColor.getRed(), newColor.getGreen(), newColor.getBlue(), null);
@@ -72,14 +72,6 @@ public class SoulreaperAxeQoLOverlay extends Overlay {
             }
         }
         return recoloredImage;
-    }
-
-    private Font loadFont() {
-        try (InputStream fontStream = getClass().getResourceAsStream("/resources/runescape.ttf")) {
-            return Font.createFont(Font.TRUETYPE_FONT, fontStream);
-        } catch (Exception error) {
-            return new Font("Arial", Font.PLAIN, 12);
-        }
     }
 
     private Color getChosenBaseColor() {
@@ -144,7 +136,7 @@ public class SoulreaperAxeQoLOverlay extends Overlay {
         this.plugin = plugin;
         this.config = config;
 
-        loadFont().deriveFont(12f);
+        this.osrsFont = FontManager.getRunescapeSmallFont();
 
         try {
             specialAttackSprite = ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/special_attack_sprite.png")));
