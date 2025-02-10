@@ -47,6 +47,8 @@ public class SoulreaperAxeQoLOverlay extends Overlay {
     private BufferedImage specialAttackSprite;
     private BufferedImage soulreaperSprite;
 
+    private boolean previousEquippedState = false;
+
     private final Font osrsFont;
 
     public BufferedImage recolorImage(BufferedImage image, Color newColor) {
@@ -131,7 +133,8 @@ public class SoulreaperAxeQoLOverlay extends Overlay {
     @Inject
     public SoulreaperAxeQoLOverlay(Client client, SoulreaperAxeQoLPlugin plugin, SoulreaperAxeQoLConfig config, ConfigManager configManager) {
         setPosition(OverlayPosition.DYNAMIC);
-        setLayer(OverlayLayer.ABOVE_WIDGETS);
+        setLayer(config.alwaysOnTop() ? OverlayLayer.ABOVE_WIDGETS : OverlayLayer.UNDER_WIDGETS);
+
         this.client = client;
         this.plugin = plugin;
         this.config = config;
@@ -171,16 +174,7 @@ public class SoulreaperAxeQoLOverlay extends Overlay {
         renderInnerCircle(g, INNER_CIRCLE_COLOR);
 
         // load, recolour, and render spec orb
-        try {
-            orbImage = ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/spec_orb_image.png")));
-            if (plugin.isSoulreaperAxeEquipped()) {
-                orbImage = recolorImage(orbImage, config.getSpecOrbColor());
-            } else {
-                orbImage = recolorImage(orbImage, config.getSoulreaperOrbColor());
-            }
-        } catch (Exception error) {
-            log.debug("Failed to load or recolour image", error);
-        }
+        loadSpecOrbImage();
 
         if (plugin.isSoulreaperAxeEquipped()) {
             renderSpecOrbSprite(g,(double) plugin.getSpecialAttackPercent() / 100, orbImage);
@@ -228,6 +222,23 @@ public class SoulreaperAxeQoLOverlay extends Overlay {
         }
 
         return null;
+    }
+
+    private void loadSpecOrbImage() {
+        if (previousEquippedState == plugin.isSoulreaperAxeEquipped()) return;
+
+        try {
+            orbImage = ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/spec_orb_image.png")));
+            if (plugin.isSoulreaperAxeEquipped()) {
+                orbImage = recolorImage(orbImage, config.getSpecOrbColor());
+            } else {
+                orbImage = recolorImage(orbImage, config.getSoulreaperOrbColor());
+            }
+
+            previousEquippedState = plugin.isSoulreaperAxeEquipped();
+        } catch (Exception error) {
+            log.debug("Failed to load or recolour image", error);
+        }
     }
 
     private void renderRegen(Graphics2D g, double percent, Color color, boolean applyOffset) {

@@ -245,6 +245,4 @@ public class SoulreaperAxeQoLPlugin extends Plugin {
 			}
 		});
 	}
-
-
 }

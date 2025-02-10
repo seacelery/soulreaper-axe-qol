@@ -37,7 +37,7 @@ public interface SoulreaperAxeQoLConfig extends Config {
 	@ConfigItem(
 			keyName = "showTextOnOrb",
 			name = "Show text on orb",
-			description ="Either show text on the orb or to the side",
+			description = "Either show text on the orb or to the side",
 			position = 1,
 			section = "Positioning"
 	) default boolean showTextOnOrb() {
@@ -45,10 +45,20 @@ public interface SoulreaperAxeQoLConfig extends Config {
 	}
 
 	@ConfigItem(
+			keyName = "alwaysOnTop",
+			name = "Always display on top",
+			description = "Select to always display the orb on top of other UI elements (requires client restart!)",
+			position = 2,
+			section = "Positioning"
+	) default boolean alwaysOnTop() {
+		return true;
+	}
+
+	@ConfigItem(
 			keyName = "offsetX",
 			name = "Offset in X axis",
-			description = "Move left or right relative to the regular special attack frame",
-			position = 2,
+			description = "Move left or right relative to the regular special attack orb",
+			position = 3,
 			section = "Positioning"
 	) default int getOffsetX() {
 		return 22;
@@ -57,8 +67,8 @@ public interface SoulreaperAxeQoLConfig extends Config {
 	@ConfigItem(
 			keyName = "offsetY",
 			name = "Offset in Y axis",
-			description = "Move up or down relative to the regular special attack frame",
-			position = 3,
+			description = "Move up or down relative to the regular special attack orb",
+			position = 4,
 			section = "Positioning"
 	) default int getOffsetY() {
 		return 25;
