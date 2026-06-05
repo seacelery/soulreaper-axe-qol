@@ -11,6 +11,8 @@ import net.runelite.api.events.AnimationChanged;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemContainerChanged;
+import net.runelite.api.events.VarbitChanged;
+import net.runelite.api.gameval.VarPlayerID;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -25,17 +27,13 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Objects;
 
+import static com.soulreaperaxeqol.SoulreaperAxeQoLConstants.*;
 
 @Slf4j
 @PluginDescriptor(
 		name = "Soulreaper Axe QoL"
 )
 public class SoulreaperAxeQoLPlugin extends Plugin {
-	private static final int DEFAULT_TOTAL_SPEC_REGEN_TICKS = 50;
-	private static final int LIGHTBEARER_TOTAL_SPEC_REGEN_TICKS = DEFAULT_TOTAL_SPEC_REGEN_TICKS / 2;
-	private static final int SOULREAPER_MAX_STACKS = 5;
-	private static final int SOULREAPER_STACK_DECREMENT_TICKS = 20;
-
 	@Inject
 	private Client client;
 
@@ -52,13 +50,19 @@ public class SoulreaperAxeQoLPlugin extends Plugin {
 	ClientThread clientThread;
 
 	@Inject
-	private SoulreaperAxeQoLOverlay overlay;
+	private SoulreaperAxeQoLExtraOrbOverlay extraOrbOverlay;
+
+	@Inject
+	private SoulreaperAxeQoLNativeOrbOverlay nativeOrbOverlay;
 
 	@Inject
 	private SoulreaperAxeQoLConfig config;
 
 	@Getter
 	private int specialAttackPercent = 100;
+
+	@Getter
+	private boolean specialAttackEnabled = false;
 
 	@Getter
 	private double specRegenProgress;
@@ -74,26 +78,25 @@ public class SoulreaperAxeQoLPlugin extends Plugin {
 
 	private boolean lightbearerEquipped = false;
 	private boolean firstGameTick = true;
-	private boolean originalShowSpecialSetting;
 	private int totalSpecRegenTicks = DEFAULT_TOTAL_SPEC_REGEN_TICKS;
 	private int ticksUntilSpecRegen = 0;
 	private int ticksUntilStackRemoval = 0;
 
 	@Override
 	protected void startUp() throws Exception {
-		overlayManager.add(overlay);
+		overlayManager.add(extraOrbOverlay);
+		overlayManager.add(nativeOrbOverlay);
 
-		originalShowSpecialSetting = configManager.getConfiguration("regenmeter", "showSpecial", Boolean.class);
-		configManager.setConfiguration("regenmeter", "showSpecial", false);
-
+		configManager.setConfiguration("regenmeter", "showSpecial", true);
 		updateOrbColour();
 	}
 
 	@Override
 	protected void shutDown() throws Exception {
-		overlayManager.remove(overlay);
+		overlayManager.remove(extraOrbOverlay);
+		overlayManager.remove(nativeOrbOverlay);
 
-		configManager.setConfiguration("regenmeter", "showSpecial", originalShowSpecialSetting);
+		resetOrbColour();
 	}
 
 	@Provides
@@ -104,7 +107,16 @@ public class SoulreaperAxeQoLPlugin extends Plugin {
 	@Subscribe
 	public void onConfigChanged(ConfigChanged event) throws IOException {
 		if (event.getGroup().equals("soulreaperaxeqol") && (event.getKey().equals("soulreaperOrbColour") || event.getKey().equals("specOrbColour"))) {
+			extraOrbOverlay.refreshOrbImages();
+			nativeOrbOverlay.refreshOrbImages();
 			updateOrbColour();
+		}
+
+		if (event.getKey().equals("alwaysOnTop"))
+		{
+			extraOrbOverlay.updateLayer(config.alwaysOnTop());
+			overlayManager.remove(extraOrbOverlay);
+			overlayManager.add(extraOrbOverlay);
 		}
 	}
 
@@ -126,7 +138,19 @@ public class SoulreaperAxeQoLPlugin extends Plugin {
 
 		getSpecialAttackPercentValue();
 		updateSpecRegenTimer();
+		updateSoulreaperStackCount();
 		updateStackRemovalTimer();
+	}
+
+	@Subscribe
+	public void onVarbitChanged(VarbitChanged event) {
+		if (event.getVarpId() == VarPlayerID.SA_ATTACK) {
+			specialAttackEnabled = event.getValue() == 1;
+		}
+
+		if (event.getVarpId() == VarPlayerID.SOULREAPER_STACKS) {
+			updateSoulreaperStackCount();
+		}
 	}
 
 	@Subscribe
@@ -148,21 +172,33 @@ public class SoulreaperAxeQoLPlugin extends Plugin {
 	@Subscribe
 	private void onAnimationChanged(AnimationChanged event) {
 		Actor actor = event.getActor();
+
+		if (actor != client.getLocalPlayer()) {
+			return;
+		}
+
 		int animationId = actor.getAnimation();
 
-		if (actor == client.getLocalPlayer()) {
-			if (isSoulreaperAttackAnimation(animationId)) {
-				soulreaperStackCount = Math.min(SOULREAPER_MAX_STACKS, soulreaperStackCount + 1);
-				ticksUntilStackRemoval = SOULREAPER_STACK_DECREMENT_TICKS;
-			} else if (isSoulreaperSpecAnimation(animationId)) {
-				soulreaperStackCount = 0;
-				ticksUntilStackRemoval = SOULREAPER_STACK_DECREMENT_TICKS;
-			}
+		if (isSoulreaperAttackAnimation(animationId)) {
+			ticksUntilStackRemoval = SOULREAPER_STACK_DECREMENT_TICKS;
+		} else if (isSoulreaperSpecAnimation(animationId))
+		{
+			ticksUntilStackRemoval = 0;
+		}
+	}
+
+	private void updateSoulreaperStackCount() {
+		soulreaperStackCount = client.getVarpValue(VarPlayerID.SOULREAPER_STACKS);
+
+		if (soulreaperStackCount == 0) {
+			ticksUntilStackRemoval = 0;
+		} else if (ticksUntilStackRemoval <= 0) {
+			ticksUntilStackRemoval = SOULREAPER_STACK_DECREMENT_TICKS;
 		}
 	}
 
 	private void getSpecialAttackPercentValue() {
-		specialAttackPercent = client.getVarpValue(VarPlayer.SPECIAL_ATTACK_PERCENT) / 10;
+		specialAttackPercent = client.getVarpValue(VarPlayerID.SA_ENERGY) / 10;
 	}
 
 	private void startSpecRegenTimer() {
@@ -185,7 +221,7 @@ public class SoulreaperAxeQoLPlugin extends Plugin {
 	}
 
 	private void handleLightbeaerSwitch(boolean lightbearerInEquipment) {
-		ticksUntilSpecRegen = lightbearerInEquipment ? Math.min(ticksUntilSpecRegen, 25) : DEFAULT_TOTAL_SPEC_REGEN_TICKS;
+		ticksUntilSpecRegen = lightbearerInEquipment ? Math.min(ticksUntilSpecRegen, LIGHTBEARER_TOTAL_SPEC_REGEN_TICKS) : DEFAULT_TOTAL_SPEC_REGEN_TICKS;
 		lightbearerEquipped = lightbearerInEquipment;
 		updateTotalSpecRegenTicks();
 	}
@@ -196,24 +232,27 @@ public class SoulreaperAxeQoLPlugin extends Plugin {
 	}
 
 	private boolean isSoulreaperAttackAnimation(int animationId) {
-		return animationId == 10171 || animationId == 10172;
+		return animationId == SOULREAPER_ATTACK_ANIMATION_1 || animationId == SOULREAPER_ATTACK_ANIMATION_2;
 	}
 
 	private boolean isSoulreaperSpecAnimation (int animationId) {
-		return animationId == 10173;
+		return animationId == SOULREAPER_SPEC_ANIMATION;
 	}
 
 	private void updateStackRemovalTimer() {
 		if (soulreaperStackCount > 0) {
 			ticksUntilStackRemoval--;
 
-			if (ticksUntilStackRemoval == 0) {
-				soulreaperStackCount--;
+			if (ticksUntilStackRemoval <= 0) {
 				ticksUntilStackRemoval = SOULREAPER_STACK_DECREMENT_TICKS;
 			}
-		}
 
-		soulreaperRegenProgress = calculateProgressPercentage(SOULREAPER_STACK_DECREMENT_TICKS - ticksUntilStackRemoval, SOULREAPER_STACK_DECREMENT_TICKS);
+			soulreaperRegenProgress = calculateProgressPercentage(
+					SOULREAPER_STACK_DECREMENT_TICKS - ticksUntilStackRemoval,
+					SOULREAPER_STACK_DECREMENT_TICKS);
+		} else {
+			soulreaperRegenProgress = 0;
+		}
 	}
 
 	private void updateOrbColour() {
@@ -226,11 +265,11 @@ public class SoulreaperAxeQoLPlugin extends Plugin {
 				BufferedImage orbActivatedImage = ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream("/spec_orb_activated_image.png")));
 
 				if (soulreaperAxeEquipped) {
-					orbImage = overlay.recolorImage(orbImage, config.getSoulreaperOrbColor());
-					orbActivatedImage = overlay.recolorImage(orbActivatedImage, config.getSoulreaperOrbColor());
+					orbImage = extraOrbOverlay.recolorImage(orbImage, config.getSoulreaperOrbColor());
+					orbActivatedImage = extraOrbOverlay.recolorImage(orbActivatedImage, config.getSoulreaperOrbColor());
 				} else {
-					orbImage = overlay.recolorImage(orbImage, config.getSpecOrbColor());
-					orbActivatedImage = overlay.recolorImage(orbActivatedImage, config.getSpecOrbColor());
+					orbImage = extraOrbOverlay.recolorImage(orbImage, config.getSpecOrbColor());
+					orbActivatedImage = extraOrbOverlay.recolorImage(orbActivatedImage, config.getSpecOrbColor());
 				}
 
 				SpritePixels orbSpritePixels = ImageUtil.getImageSpritePixels(orbImage, client);
@@ -243,6 +282,14 @@ public class SoulreaperAxeQoLPlugin extends Plugin {
 			} catch (Exception error) {
 				log.debug("Failed to update orb colour", error);
 			}
+		});
+	}
+
+	private void resetOrbColour() {
+		clientThread.invokeLater(() -> {
+			client.getSpriteOverrides().remove(SpriteID.MINIMAP_ORB_SPECIAL);
+			client.getSpriteOverrides().remove(SpriteID.MINIMAP_ORB_SPECIAL_ACTIVATED);
+			client.getWidgetSpriteCache().reset();
 		});
 	}
 }

@@ -5,9 +5,12 @@ import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
+import net.runelite.client.config.Range;
 
 @ConfigGroup("soulreaperaxeqol")
 public interface SoulreaperAxeQoLConfig extends Config {
+	public static final int MAX_OFFSET_VALUE = 10000;
+	public static final int MIN_OFFSET_VALUE = -10000;
 
 	public enum themes {
 		DEFAULT,
@@ -47,13 +50,17 @@ public interface SoulreaperAxeQoLConfig extends Config {
 	@ConfigItem(
 			keyName = "alwaysOnTop",
 			name = "Always display on top",
-			description = "Select to always display the orb on top of other UI elements (requires client restart!)",
+			description = "Select to always display the orb on top of other UI elements",
 			position = 2,
 			section = "Positioning"
 	) default boolean alwaysOnTop() {
 		return true;
 	}
 
+	@Range(
+			min = MIN_OFFSET_VALUE,
+			max = MAX_OFFSET_VALUE
+	)
 	@ConfigItem(
 			keyName = "offsetX",
 			name = "Offset in X axis",
@@ -64,6 +71,10 @@ public interface SoulreaperAxeQoLConfig extends Config {
 		return 22;
 	}
 
+	@Range(
+			min = MIN_OFFSET_VALUE,
+			max = MAX_OFFSET_VALUE
+	)
 	@ConfigItem(
 			keyName = "offsetY",
 			name = "Offset in Y axis",
