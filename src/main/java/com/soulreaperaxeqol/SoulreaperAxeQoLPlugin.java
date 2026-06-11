@@ -163,7 +163,7 @@ public class SoulreaperAxeQoLPlugin extends Plugin {
 			handleLightbeaerSwitch(lightbearerInEquipment);
 		};
 
-		boolean soulreaperAxeInEquipment = equipment.contains(ItemID.SOULREAPER_AXE_28338);
+		boolean soulreaperAxeInEquipment = equipment.contains(ItemID.SOULREAPER_AXE_28338) || equipment.contains(ItemID.SOULREAPER_AXE_O);
 		if (soulreaperAxeEquipped != soulreaperAxeInEquipment) {
 			handleSoulreaperAxeSwitch(soulreaperAxeInEquipment);
 		}
