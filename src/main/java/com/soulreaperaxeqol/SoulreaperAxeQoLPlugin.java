@@ -84,8 +84,8 @@ public class SoulreaperAxeQoLPlugin extends Plugin {
 
 	@Override
 	protected void startUp() throws Exception {
-		overlayManager.add(extraOrbOverlay);
 		overlayManager.add(nativeOrbOverlay);
+		overlayManager.add(extraOrbOverlay);
 
 		configManager.setConfiguration("regenmeter", "showSpecial", true);
 		updateOrbColour();
@@ -93,8 +93,8 @@ public class SoulreaperAxeQoLPlugin extends Plugin {
 
 	@Override
 	protected void shutDown() throws Exception {
-		overlayManager.remove(extraOrbOverlay);
 		overlayManager.remove(nativeOrbOverlay);
+		overlayManager.remove(extraOrbOverlay);
 
 		resetOrbColour();
 	}
